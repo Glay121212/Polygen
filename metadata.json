@@ -1,0 +1,8 @@
+{
+  "name": "PolyGen 3D",
+  "description": "A text-to-3D application that generates and previews OBJ models from text prompts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
