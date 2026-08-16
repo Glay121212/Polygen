@@ -1,12 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 
-function getGenAIClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+function getGenAIClient(userApiKey?: string): GoogleGenAI {
+  const apiKey = userApiKey?.trim() || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error(
-      "GEMINI_API_KEY is not set. If you are hosting on Vercel, please add GEMINI_API_KEY to your Vercel Project Settings > Environment Variables."
-    );
+    throw new Error("geminiapikey is not set");
   }
   return new GoogleGenAI({ apiKey });
 }
@@ -96,13 +94,13 @@ function sanitizeObj(raw: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, model: requestedModel } = await req.json();
+    const { prompt, model: requestedModel, apiKey } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
-    const ai = getGenAIClient();
+    const ai = getGenAIClient(apiKey);
 
     const systemInstruction = `You are a professional low-poly 3D OBJ model generator.
 Create a clean, symmetrical, low-poly Wavefront .obj file representing the requested object.
@@ -157,6 +155,9 @@ Strict Rules:
   } catch (error: any) {
     console.error("Error generating 3D model:", error);
     const message = error?.message || "Failed to generate 3D model";
+    if (message.includes("geminiapikey is not set")) {
+      return NextResponse.json({ error: "geminiapikey is not set" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: message.includes("429") || message.includes("quota") ? "Rate limit reached. Please wait a moment and try again." : message },
       { status: 500 }
