@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import ModelViewer from '@/components/ModelViewer';
-import { Loader2, Download, Sparkles, Box } from 'lucide-react';
+import { Loader2, Download, Sparkles, Box, Cpu } from 'lucide-react';
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
+  const [selectedModel, setSelectedModel] = useState('gemini-3.6-flash');
   const [isGenerating, setIsGenerating] = useState(false);
   const [objContent, setObjContent] = useState<string>('');
   const [error, setError] = useState('');
@@ -21,7 +22,7 @@ export default function Home() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt, model: selectedModel })
       });
       
       const data = await res.json();
@@ -57,13 +58,16 @@ export default function Home() {
       {/* Header */}
       <header className="w-full px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-10">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
             <Box size={18} />
           </div>
-          <h1 className="font-semibold text-lg tracking-tight">PolyGen</h1>
+          <h1 className="font-semibold text-lg tracking-tight">PolyGen 3D</h1>
         </div>
-        <div className="text-xs font-medium px-3 py-1 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500">
-          AI 3D Generator
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-medium px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 rounded-full flex items-center gap-1.5">
+            <Cpu size={13} />
+            <span>{selectedModel}</span>
+          </div>
         </div>
       </header>
 
@@ -75,26 +79,45 @@ export default function Home() {
           <div>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">Text to 3D</h2>
             <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-sm">
-              Describe an object, and our AI will generate a standard OBJ file for you to preview and download.
+              Describe an object to generate a colorful 3D Wavefront .OBJ file ready to preview, customize, and download.
             </p>
           </div>
 
-          <form onSubmit={handleGenerate} className="flex flex-col gap-4 bg-zinc-50 dark:bg-zinc-900 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+          <form onSubmit={handleGenerate} className="flex flex-col gap-3 bg-zinc-50 dark:bg-zinc-900 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800">
             <div className="relative">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g. A low poly medieval broadsword..."
-                className="w-full h-32 p-4 bg-transparent resize-none outline-none text-base placeholder:text-zinc-400"
+                placeholder="e.g. A low poly medieval broadsword with a glowing ruby gem..."
+                className="w-full h-28 p-3 bg-transparent resize-none outline-none text-sm placeholder:text-zinc-400"
                 disabled={isGenerating}
                 autoFocus
               />
             </div>
-            <div className="p-2">
+
+            {/* AI Model Selector */}
+            <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+              <span className="text-zinc-500 font-medium flex items-center gap-1">
+                <Cpu size={14} />
+                AI Model:
+              </span>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                disabled={isGenerating}
+                className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer"
+              >
+                <option value="gemini-3.6-flash">Gemini 3.6 Flash (Recommended)</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              </select>
+            </div>
+
+            <div className="pt-1">
               <button
                 type="submit"
                 disabled={!prompt.trim() || isGenerating}
-                className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-medium text-sm transition-all shadow-md shadow-indigo-600/20"
               >
                 {isGenerating ? (
                   <>
@@ -104,7 +127,7 @@ export default function Home() {
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    Generate Model
+                    Generate 3D Model
                   </>
                 )}
               </button>
@@ -115,7 +138,7 @@ export default function Home() {
           <div className="flex flex-col gap-2">
             <span className="text-xs font-medium text-zinc-400">Try a sample prompt:</span>
             <div className="flex flex-wrap gap-2">
-              {['Medieval Sword', 'Space Rocket', 'Wooden Chair', 'Treasure Chest', 'Simple Tree'].map((sample) => (
+              {['Medieval Sword', 'Space Rocket', 'Treasure Chest', 'Magic Wand', 'Golden Crown', 'Cyberpunk Car'].map((sample) => (
                 <button
                   key={sample}
                   onClick={() => {
@@ -137,14 +160,14 @@ export default function Home() {
           )}
           
           <div className="mt-auto hidden lg:block text-xs text-zinc-400 space-y-1">
-            <p>• Generates raw Wavefront OBJ files</p>
-            <p>• Optimized for low-poly structures</p>
-            <p>• Drag to rotate, scroll to zoom</p>
+            <p>• Powered by Gemini 3.6 Flash model</p>
+            <p>• Multi-part color palette & vertex colors supported</p>
+            <p>• Customize colors, materials, roughness & lighting</p>
           </div>
         </div>
 
         {/* Right Column: 3D Viewer */}
-        <div className="flex-1 min-h-[400px] lg:min-h-0 relative flex flex-col">
+        <div className="flex-1 min-h-[440px] lg:min-h-0 relative flex flex-col">
           <div className="flex-1 rounded-2xl overflow-hidden relative">
             <ModelViewer objContent={objContent} />
           </div>
@@ -166,3 +189,4 @@ export default function Home() {
     </main>
   );
 }
+
